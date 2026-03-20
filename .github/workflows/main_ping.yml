@@ -1,32 +1,30 @@
-
 name: Keep HF Space Alive
 
 on:
+  schedule:
+    - cron: "*/25 * * * *"
   workflow_dispatch:
 
 jobs:
-  ping:
+  keepalive:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
-      - name: Ping HuggingFace Space
+      - name: Wake HF Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          URL="https://huggingface.co/api/spaces/forextraders/Forex_Trader/restart?factory=false"
-          TOKEN="${{ secrets.HF_TOKEN }}"
+          echo "$(date -u '+%H:%M:%S UTC') - Pinging forextraders/Forex_Trader..."
 
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-          -H "Authorization: Bearer $TOKEN" \
-          "$URL")
+          RESPONSE=$(curl -s \
+            -H "Authorization: Bearer $HF_TOKEN" \
+            "https://huggingface.co/api/spaces/forextraders/Forex_Trader")
 
-          echo "HTTP Status: $STATUS"
+          echo "Response: $RESPONSE"
 
-      - name: Wait 5 minutes
-        run: sleep 300
+          curl -s -X POST \
+            -H "Authorization: Bearer $HF_TOKEN" \
+            "https://huggingface.co/api/spaces/forextraders/Forex_Trader/restart?factory=false"
 
-      - name: Trigger workflow again
-        run: |
-          curl -X POST \
-          -H "Accept: application/vnd.github+json" \
-          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          https://api.github.com/repos/${{ github.repository }}/actions/workflows/keep-hf-space-alive.yml/dispatches \
-          -d '{"ref":"main"}'
+          echo "Done"
