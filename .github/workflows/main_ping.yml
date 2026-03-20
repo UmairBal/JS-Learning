@@ -15,20 +15,16 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "$(date -u '+%H:%M:%S UTC') - Pinging Space..."
+          echo "$(date -u '+%H:%M:%S UTC') - Pinging forextraders/Forex_Trader..."
 
           RESPONSE=$(curl -s \
             -H "Authorization: Bearer $HF_TOKEN" \
-            "https://huggingface.co/api/spaces/Umair1313/Forex_Trader")
+            "https://huggingface.co/api/spaces/forextraders/Forex_Trader")
 
           echo "Response: $RESPONSE"
 
-          STAGE=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('runtime',{}).get('stage','unknown'))" 2>/dev/null || echo "unknown")
-
-          echo "Stage: $STAGE"
-
           curl -s -X POST \
             -H "Authorization: Bearer $HF_TOKEN" \
-            "https://huggingface.co/api/spaces/Umair1313/Forex_Trader/restart?factory=false"
+            "https://huggingface.co/api/spaces/forextraders/Forex_Trader/restart?factory=false"
 
-          echo "Done - Space will be running shortly"
+          echo "Done"
