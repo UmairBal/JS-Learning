@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Ping HuggingFace Space
         run: |
-          URL="https://ubaloch1313-futures-bot.hf.space"
+          URL="https://forextraders-Forex_Trader.hf.space"
           TOKEN="${{ secrets.HF_TOKEN }}"
 
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
