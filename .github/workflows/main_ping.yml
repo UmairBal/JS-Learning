@@ -1,36 +1,32 @@
+
 name: Keep HF Space Alive
 
 on:
-  schedule:
-    - cron: "*/25 * * * *"
   workflow_dispatch:
 
 jobs:
-  keepalive:
+  ping:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
 
     steps:
-      - name: Wake HF Space
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      - name: Ping HuggingFace Space
         run: |
-          echo "$(date -u '+%H:%M:%S UTC') - Restart request for forextraders/Forex_Trader..."
-          RESPONSE=$(curl -s -w "%{http_code}" -X POST \
-            -H "Authorization: Bearer $HF_TOKEN" \
-            "https://huggingface.co/api/spaces/forextraders/Forex_Trader/restart?factory=false")
-          
-          HTTP_CODE="${RESPONSE: -3}"
-          BODY="${RESPONSE%???}"
-          
-          echo "HTTP status: $HTTP_CODE"
-          echo "Response body: $BODY"
-          
-          if [[ "$HTTP_CODE" == "200" || "$HTTP_CODE" == "204" ]]; then
-            echo "Success - Space restart triggered."
-          else
-            echo "Failed - check token permissions or Space existence."
-            exit 1
-          fi
-          
-          echo "Done"
+          URL="https://huggingface.co/api/spaces/forextraders/Forex_Trader/restart?factory=false"
+          TOKEN="${{ secrets.HF_TOKEN }}"
+
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          -H "Authorization: Bearer $TOKEN" \
+          "$URL")
+
+          echo "HTTP Status: $STATUS"
+
+      - name: Wait 5 minutes
+        run: sleep 300
+
+      - name: Trigger workflow again
+        run: |
+          curl -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/actions/workflows/keep-hf-space-alive.yml/dispatches \
+          -d '{"ref":"main"}'
