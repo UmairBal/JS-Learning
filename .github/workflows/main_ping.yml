@@ -11,15 +11,15 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: Check and wake HF Space
+      - name: Wake HF Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "$(date -u '+%H:%M:%S UTC') - Checking Space..."
+          echo "$(date -u '+%H:%M:%S UTC') - Pinging Space..."
 
           RESPONSE=$(curl -s \
             -H "Authorization: Bearer $HF_TOKEN" \
-            "https://huggingface.co/api/spaces/forextraders/Forex_Trader")
+            "https://huggingface.co/api/spaces/Umair1313/Forex_Trader")
 
           echo "Response: $RESPONSE"
 
@@ -29,6 +29,6 @@ jobs:
 
           curl -s -X POST \
             -H "Authorization: Bearer $HF_TOKEN" \
-            "https://huggingface.co/api/spaces/forextraders/Forex_Trader/restart?factory=false"
+            "https://huggingface.co/api/spaces/Umair1313/Forex_Trader/restart?factory=false"
 
-          echo "Restart sent - Space will be running shortly"
+          echo "Done - Space will be running shortly"
