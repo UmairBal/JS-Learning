@@ -1,4 +1,4 @@
-name: 🤖 Keep HF Space Alive
+name: Keep HF Space Alive
 
 on:
   schedule:
@@ -11,51 +11,24 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: 🔄 Wake Space via HF API
+      - name: Check and wake HF Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "⏰ $(date -u '+%H:%M:%S UTC') — Checking Space status..."
+          echo "$(date -u '+%H:%M:%S UTC') - Checking Space..."
 
-          # ── Step 1: Check current stage ──────────────────────────────
           RESPONSE=$(curl -s \
             -H "Authorization: Bearer $HF_TOKEN" \
             "https://huggingface.co/api/spaces/forextraders/Forex_Trader")
 
-          echo "Raw response: $RESPONSE"
+          echo "Response: $RESPONSE"
 
-          STAGE=$(echo "$RESPONSE" | python3 -c \
-            "import sys,json
-try:
-    d=json.load(sys.stdin)
-    print(d.get('runtime',{}).get('stage','unknown'))
-except:
-    print('parse_error')" 2>/dev/null)
+          STAGE=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('runtime',{}).get('stage','unknown'))" 2>/dev/null || echo "unknown")
 
-          echo "Current stage: $STAGE"
+          echo "Stage: $STAGE"
 
-          # ── Step 2: Always send restart to keep it fresh ─────────────
-          echo "Sending restart signal..."
-          RESTART=$(curl -s -X POST \
+          curl -s -X POST \
             -H "Authorization: Bearer $HF_TOKEN" \
-            "https://huggingface.co/api/spaces/forextraders/Forex_Trader/restart?factory=false")
+            "https://huggingface.co/api/spaces/forextraders/Forex_Trader/restart?factory=false"
 
-          echo "Restart response: $RESTART"
-
-          # ── Step 3: Wait 20s then verify ─────────────────────────────
-          sleep 20
-
-          RESPONSE2=$(curl -s \
-            -H "Authorization: Bearer $HF_TOKEN" \
-            "https://huggingface.co/api/spaces/forextraders/Forex_Trader")
-
-          STAGE2=$(echo "$RESPONSE2" | python3 -c \
-            "import sys,json
-try:
-    d=json.load(sys.stdin)
-    print(d.get('runtime',{}).get('stage','unknown'))
-except:
-    print('parse_error')" 2>/dev/null)
-
-          echo "Stage after restart: $STAGE2"
-          echo "✅ Done — Space should be running"
+          echo "Restart sent - Space will be running shortly"
